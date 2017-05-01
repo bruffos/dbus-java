@@ -215,68 +215,6 @@ public class CreateInterface {
         return ("".equals(this.comment) ? "" : "   /**\n" + this.comment + "   */\n") + annotations + "  public " + sig + params.replaceAll("..$", "") + ")" + (null == throwses ? "" : " throws " + throwses) + ";";
     }
 
-
-    /**
-     * <property name="Name" type="s" access="read">
-     *         public String getAlias() {
-     return (String)this.getTyped("Alias", String.class);
-     }
-
-     public void setAlias(String _alias) {
-     this.setTyped("Alias", _alias);
-     }
-     The possible property access flags are "readwrite", "read", and "write"
-     * @param meth
-     * @param imports
-     * @param structs
-     * @param anns
-     * @return
-     */
-    private String parseProperty(Element meth, Set<String> imports, Map<StructStruct, Type[]> structs, Set<String> anns) throws DBusException {
-        if (null == meth.getAttribute("name") || "".equals(meth.getAttribute("name"))) {
-            System.err.println(Gettext.t("ERROR: Method name was blank, failed"));
-            System.exit(1);
-        }
-        this.comment = "";
-
-        String annotations = "";
-        String type = getJavaType(meth.getAttribute("type"), imports, structs, false, false);
-
-        String access = meth.getAttribute("access");
-        String sig = "";
-
-        switch (access) {
-            case "readwrite":
-                sig = sig + createGetProperty(meth, annotations, type);
-                sig = sig + createSetProperty(meth, annotations, type);
-
-                break;
-            case "read":
-                sig = createGetProperty(meth, annotations, type);
-                break;
-            case "write":
-                sig = createSetProperty(meth, annotations, type);
-                break;
-            default:
-                break;
-        }
-        return sig;
-
-    }
-    private String createSetProperty(Element meth, String annotations, String type) {
-        String name = meth.getAttribute("name");
-        String prop = "void set" + IdentifierMangler.mangle(name) + "(" + type + " _" + name;
-
-        return ("".equals(this.comment) ? "" : "   /**\n" + this.comment + "   */\n") + annotations + "  public " + prop + ")" + ";\n\n";
-    }
-
-    private String createGetProperty(Element meth, String annotations, String type) {
-        String sig = type;
-        sig = sig + " get" + IdentifierMangler.mangle(meth.getAttribute("name")) + "(";
-
-        return ("".equals(this.comment) ? "" : "   /**\n" + this.comment + "   */\n") + annotations + "  public " + sig + ")" + ";\n\n";
-    }
-
     String parseSignal(Element signal, Set<String> imports, Map<StructStruct, Type[]> structs, Set<String> anns) throws DBusException {
         Map<String, String> params = new HashMap();
         Vector<String> porder = new Vector();
@@ -381,7 +319,7 @@ public class CreateInterface {
                 } else if ("signal".equals(meth.getNodeName())) {
                     signals = signals + this.parseSignal((Element) meth, imports, structs, anns);
                 } else if ("property".equals(meth.getNodeName())) {
-                    properties = properties + this.parseProperty((Element) meth, imports, structs, anns);
+                    System.err.println("WARNING: Ignoring property");
                 } else if ("annotation".equals(meth.getNodeName())) {
                     annotations = annotations + this.parseAnnotation((Element) meth, imports, anns);
                 }
