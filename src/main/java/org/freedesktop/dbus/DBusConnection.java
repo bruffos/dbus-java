@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * Signal Handlers and method calls from remote objects are run in their own threads, you MUST handle the concurrency issues.
  * </p>
  */
-public final class DBusConnection extends AbstractConnection {
+public class DBusConnection extends AbstractConnection {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     /**
      * Add addresses of peers to a set which will watch for them to
@@ -584,6 +584,7 @@ public final class DBusConnection extends AbstractConnection {
        * @throws ClassCastException If type is not a sub-type of DBusInterface
        * @throws DBusException If busname or objectpath are incorrectly formatted.
     */
+    @Override
     public DBusInterface getRemoteObject(String busname, String objectpath) throws DBusException {
         if (null == busname) {
             throw new DBusException(t("Invalid bus name: null"));
@@ -653,6 +654,7 @@ public final class DBusConnection extends AbstractConnection {
        * @throws ClassCastException If type is not a sub-type of DBusInterface
        * @throws DBusException If busname or objectpath are incorrectly formatted or type is not in a package.
     */
+    @Override
     public <I extends DBusInterface> I getRemoteObject(String busname, String objectpath, Class<I> type) throws DBusException {
         return getRemoteObject(busname, objectpath, type, true);
     }
@@ -678,6 +680,7 @@ public final class DBusConnection extends AbstractConnection {
        * @throws DBusException If busname or objectpath are incorrectly formatted or type is not in a package.
     */
     @SuppressWarnings("unchecked")
+    @Override
     public <I extends DBusInterface> I getRemoteObject(String busname, String objectpath, Class<I> type, boolean autostart) throws DBusException {
         if (null == busname) {
             throw new DBusException(t("Invalid bus name: null"));

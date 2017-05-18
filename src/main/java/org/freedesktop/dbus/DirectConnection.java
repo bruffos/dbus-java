@@ -26,18 +26,21 @@ import org.freedesktop.dbus.exceptions.DBusException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Handles a peer to peer connection between two applications withou a bus daemon.
+/**
+ * Handles a peer to peer connection between two applications withou a bus daemon.
  * <p>
  * Signal Handlers and method calls from remote objects are run in their own threads, you MUST handle the concurrency issues.
  * </p>
  */
 public class DirectConnection extends AbstractConnection {
     private final Logger logger = LoggerFactory.getLogger(getClass());
+
     /**
-    * Create a direct connection to another application.
-    * @param address The address to connect to. This is a standard D-Bus address, except that the additional parameter 'listen=true' should be added in the application which is creating the socket.
-    * @throws DBusException on error
-    */
+     * Create a direct connection to another application.
+     *
+     * @param address The address to connect to. This is a standard D-Bus address, except that the additional parameter 'listen=true' should be added in the application which is creating the socket.
+     * @throws DBusException on error
+     */
     public DirectConnection(String address) throws DBusException {
         super(address);
 
@@ -60,9 +63,10 @@ public class DirectConnection extends AbstractConnection {
     }
 
     /**
-    * Creates a bus address for a randomly generated tcp port.
-    * @return a random bus address.
-    */
+     * Creates a bus address for a randomly generated tcp port.
+     *
+     * @return a random bus address.
+     */
     public static String createDynamicTCPSession() {
         String address = "tcp:host=localhost";
         int port;
@@ -82,9 +86,10 @@ public class DirectConnection extends AbstractConnection {
     }
 
     /**
-    * Creates a bus address for a randomly generated abstract unix socket.
-    * @return a random bus address.
-    */
+     * Creates a bus address for a randomly generated abstract unix socket.
+     *
+     * @return a random bus address.
+     */
     public static String createDynamicSession() {
         String address = "unix:";
         String path = "/tmp/dbus-XXXXXXXXXX";
@@ -105,7 +110,7 @@ public class DirectConnection extends AbstractConnection {
 
     DBusInterface dynamicProxy(String path) throws DBusException {
         try {
-            DBus.Introspectable intro = (DBus.Introspectable) getRemoteObject(path, DBus.Introspectable.class);
+            DBus.Introspectable intro = getRemoteObject("", path, DBus.Introspectable.class);
             String data = intro.Introspect();
             String[] tags = data.split("[<>]");
             Vector<String> ifaces = new Vector<String>();
@@ -144,7 +149,7 @@ public class DirectConnection extends AbstractConnection {
             if (EXCEPTION_DEBUG) {
                 logger.error("", e);
             }
-            throw new DBusException(MessageFormat.format(t("Failed to create proxy object for {0}; reason: {1}."), new Object[] {
+            throw new DBusException(MessageFormat.format(t("Failed to create proxy object for {0}; reason: {1}."), new Object[]{
                     path, e.getMessage()
             }));
         }
@@ -166,24 +171,25 @@ public class DirectConnection extends AbstractConnection {
     }
 
     /**
-       * Return a reference to a remote object.
-       * This method will always refer to the well known name (if given) rather than resolving it to a unique bus name.
-       * In particular this means that if a process providing the well known name disappears and is taken over by another process
-       * proxy objects gained by this method will make calls on the new proccess.
-       *
-       * This method will use bus introspection to determine the interfaces on a remote object and so
-       * <b>may block</b> and <b>may fail</b>. The resulting proxy object will, however, be castable
-       * to any interface it implements. It will also autostart the process if applicable. Also note
-       * that the resulting proxy may fail to execute the correct method with overloaded methods
-       * and that complex types may fail in interesting ways. Basically, if something odd happens,
-       * try specifying the interface explicitly.
-       *
-       * @param objectpath The path on which the process is exporting the object.
-       * @return A reference to a remote object.
-       * @throws ClassCastException If type is not a sub-type of DBusInterface
-       * @throws DBusException If busname or objectpath are incorrectly formatted.
-    */
-    public DBusInterface getRemoteObject(String objectpath) throws DBusException {
+     * Return a reference to a remote object.
+     * This method will always refer to the well known name (if given) rather than resolving it to a unique bus name.
+     * In particular this means that if a process providing the well known name disappears and is taken over by another process
+     * proxy objects gained by this method will make calls on the new proccess.
+     * <p>
+     * This method will use bus introspection to determine the interfaces on a remote object and so
+     * <b>may block</b> and <b>may fail</b>. The resulting proxy object will, however, be castable
+     * to any interface it implements. It will also autostart the process if applicable. Also note
+     * that the resulting proxy may fail to execute the correct method with overloaded methods
+     * and that complex types may fail in interesting ways. Basically, if something odd happens,
+     * try specifying the interface explicitly.
+     *
+     * @param objectpath The path on which the process is exporting the object.
+     * @return A reference to a remote object.
+     * @throws ClassCastException If type is not a sub-type of DBusInterface
+     * @throws DBusException      If busname or objectpath are incorrectly formatted.
+     */
+    @Override
+    public DBusInterface getRemoteObject(String busname, String objectpath) throws DBusException {
         if (null == objectpath) {
             throw new DBusException(t("Invalid object path: null"));
         }
@@ -195,19 +201,27 @@ public class DirectConnection extends AbstractConnection {
         return dynamicProxy(objectpath);
     }
 
+    @Override
+    public <I extends DBusInterface> I getRemoteObject(String busname, String objectpath, Class<I> type, boolean autostart) throws DBusException {
+        return getRemoteObject(busname, objectpath, type);
+    }
+
     /**
-       * Return a reference to a remote object.
-       * This method will always refer to the well known name (if given) rather than resolving it to a unique bus name.
-       * In particular this means that if a process providing the well known name disappears and is taken over by another process
-       * proxy objects gained by this method will make calls on the new proccess.
-       * @param objectpath The path on which the process is exporting the object.
-       * @param type The interface they are exporting it on. This type must have the same full class name and exposed method signatures
-       * as the interface the remote object is exporting.
-       * @return A reference to a remote object.
-       * @throws ClassCastException If type is not a sub-type of DBusInterface
-       * @throws DBusException If busname or objectpath are incorrectly formatted or type is not in a package.
-    */
-    public DBusInterface getRemoteObject(String objectpath, Class<? extends DBusInterface> type) throws DBusException {
+     * Return a reference to a remote object.
+     * This method will always refer to the well known name (if given) rather than resolving it to a unique bus name.
+     * In particular this means that if a process providing the well known name disappears and is taken over by another process
+     * proxy objects gained by this method will make calls on the new proccess.
+     *
+     * @param objectpath The path on which the process is exporting the object.
+     * @param type       The interface they are exporting it on. This type must have the same full class name and exposed method signatures
+     *                   as the interface the remote object is exporting.
+     * @return A reference to a remote object.
+     * @throws ClassCastException If type is not a sub-type of DBusInterface
+     * @throws DBusException      If busname or objectpath are incorrectly formatted or type is not in a package.
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <I extends DBusInterface> I getRemoteObject(String busname, String objectpath, Class<I> type) throws DBusException {
         if (null == objectpath) {
             throw new DBusException(t("Invalid object path: null"));
         }
@@ -230,7 +244,7 @@ public class DirectConnection extends AbstractConnection {
         }
 
         RemoteObject ro = new RemoteObject(null, objectpath, type, false);
-        DBusInterface i = (DBusInterface) Proxy.newProxyInstance(type.getClassLoader(), new Class[] {
+        I i = (I) Proxy.newProxyInstance(type.getClassLoader(), new Class[]{
                 type
         }, new RemoteInvocationHandler(this, ro));
         importedObjects.put(i, ro);

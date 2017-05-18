@@ -561,6 +561,12 @@ public abstract class AbstractConnection {
         removeSigHandler(new DBusMatchRule(type, null, objectpath), handler);
     }
 
+    public abstract DBusInterface getRemoteObject(String busname, String objectpath) throws DBusException;
+
+    public abstract <I extends DBusInterface> I getRemoteObject(String busname, String objectpath, Class<I> type) throws DBusException;
+
+    public abstract <I extends DBusInterface> I getRemoteObject(String busname, String objectpath, Class<I> type, boolean autostart) throws DBusException;
+
     protected abstract <T extends DBusSignal> void removeSigHandler(DBusMatchRule rule, DBusSigHandler<T> handler) throws DBusException;
 
     /**
