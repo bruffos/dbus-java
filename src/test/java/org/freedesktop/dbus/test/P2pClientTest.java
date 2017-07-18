@@ -29,7 +29,7 @@ public final class P2pClientTest {
             String address = r.readLine();
             DirectConnection dc = new DirectConnection(address);
             System.out.println("Connected");
-            TestRemoteInterface tri = (TestRemoteInterface) dc.getRemoteObject("/Test");
+            TestRemoteInterface tri = (TestRemoteInterface) dc.getRemoteObject("","/Test");
             System.out.println(tri.getName());
             System.out.println(tri.testfloat(new float[] {
                     17.093f, -23f, 0.0f, 31.42f
